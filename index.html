@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#101426" />
+  <title>小智 AI · 智能助手</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #0b1020; --panel: #111a30; --panel2: #17223d;
+      --text: #eef3ff; --muted: #9ba9c7; --line: rgba(255,255,255,.09);
+      --accent: #8b9cff; --accent2: #67e4d1;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; min-height: 100vh; color: var(--text);
+      background: radial-gradient(900px 500px at 75% -10%, #273766 0%, transparent 60%), var(--bg);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+    }
+    .app { min-height: 100vh; display: grid; grid-template-columns: 270px 1fr; }
+    aside { padding: 24px 18px; border-right: 1px solid var(--line); background: rgba(8,13,27,.72); }
+    .brand { display:flex; align-items:center; gap:12px; margin: 3px 5px 30px; }
+    .logo { width:42px; height:42px; display:grid; place-items:center; border-radius:14px;
+      background: linear-gradient(135deg,var(--accent),var(--accent2)); color:#091326; font-size:22px; font-weight:900; }
+    .brand strong { display:block; font-size:17px; letter-spacing:.3px; }
+    .brand small { color:var(--muted); font-size:11px; }
+    .new-chat { width:100%; padding:12px 14px; border:1px solid var(--line); border-radius:12px;
+      background:var(--panel); color:var(--text); cursor:pointer; text-align:left; font-size:14px; }
+    .new-chat:hover, .quick:hover { border-color:rgba(139,156,255,.65); background:var(--panel2); }
+    .side-label { margin:28px 8px 10px; color:#71809f; font-size:11px; letter-spacing:1.5px; text-transform:uppercase; }
+    .side-note { margin:0 8px; color:var(--muted); font-size:12px; line-height:1.8; }
+    .status { display:flex; align-items:center; gap:8px; margin:22px 8px; color:#a9b8d6; font-size:12px; }
+    .dot { width:8px; height:8px; border-radius:50%; background:#f3c96b; box-shadow:0 0 10px #f3c96b; }
+    main { display:flex; flex-direction:column; min-width:0; height:100vh; }
+    header { height:70px; padding:0 32px; display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid var(--line); }
+    header span { color:var(--muted); font-size:13px; }
+    .model { border:1px solid var(--line); padding:8px 11px; border-radius:10px; color:#cbd5f0; font-size:12px; }
+    .content { width:min(850px, calc(100% - 40px)); margin:0 auto; flex:1; display:flex; flex-direction:column; min-height:0; }
+    #messages { flex:1; overflow:auto; padding:34px 4px 20px; scroll-behavior:smooth; }
+    .welcome { text-align:center; padding:9vh 12px 25px; }
+    .orb { width:66px; height:66px; margin:0 auto 22px; display:grid; place-items:center; border-radius:22px;
+      background:linear-gradient(135deg,rgba(139,156,255,.25),rgba(103,228,209,.18)); border:1px solid rgba(164,183,255,.2); font-size:30px; }
+    h1 { margin:0 0 10px; font-size:clamp(27px,4vw,38px); letter-spacing:-1px; }
+    .welcome p { color:var(--muted); margin:0 auto; max-width:480px; line-height:1.7; font-size:14px; }
+    .quick-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:10px; margin:27px auto 0; max-width:620px; }
+    .quick { text-align:left; padding:14px 15px; border:1px solid var(--line); border-radius:13px; background:rgba(17,26,48,.7); color:var(--text); cursor:pointer; }
+    .quick b { display:block; font-size:13px; margin-bottom:5px; font-weight:600; }
+    .quick small { color:var(--muted); font-size:11px; }
+    .message { display:flex; gap:12px; margin:0 0 23px; align-items:flex-start; }
+    .avatar { flex:0 0 34px; height:34px; border-radius:11px; display:grid; place-items:center; background:var(--panel2); font-size:15px; }
+    .message.user .avatar { background:#28365e; }
+    .bubble { max-width:calc(100% - 48px); padding:12px 15px; border:1px solid var(--line); border-radius:4px 14px 14px 14px; background:rgba(17,26,48,.82); line-height:1.75; font-size:14px; white-space:pre-wrap; overflow-wrap:anywhere; }
+    .message.user .bubble { background:rgba(48,65,111,.55); border-radius:14px 4px 14px 14px; }
+    .bubble-actions { margin-top:7px; }
+    .copy { border:0; background:none; color:#8292b6; font-size:11px; cursor:pointer; padding:3px 0; }
+    .copy:hover { color:var(--text); }
+    .composer-wrap { padding:12px 0 24px; }
+    .composer { display:flex; gap:10px; align-items:flex-end; padding:10px; background:rgba(21,31,55,.95); border:1px solid rgba(160,178,230,.18); border-radius:17px; box-shadow:0 12px 40px rgba(0,0,0,.18); }
+    textarea { flex:1; resize:none; min-height:27px; max-height:140px; border:0; outline:0; background:transparent; color:var(--text); font:14px/1.6 inherit; padding:5px 7px; }
+    textarea::placeholder { color:#71809f; }
+    .send { width:39px; height:39px; flex:0 0 39px; border:0; border-radius:12px; cursor:pointer; color:#0b1427; font-size:18px; font-weight:bold; background:linear-gradient(135deg,var(--accent),var(--accent2)); }
+    .send:disabled { opacity:.45; cursor:not-allowed; }
+    .hint { text-align:center; color:#667493; font-size:10px; margin-top:10px; }
+    .typing { color:var(--muted); font-size:13px; padding:5px 0; }
+    @media(max-width:720px) {
+      .app { grid-template-columns:1fr; } aside { display:none; } main { height:100dvh; }
+      header { padding:0 18px; height:60px; } .content { width:calc(100% - 28px); }
+      #messages { padding-top:20px; } .welcome { padding-top:7vh; } .quick-grid { grid-template-columns:1fr; }
+      .composer-wrap { padding-bottom: max(15px, env(safe-area-inset-bottom)); }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <aside>
+      <div class="brand">
+        <div class="logo">智</div>
+        <div><strong>小智 AI</strong><small>YOUR SMART COMPANION</small></div>
+      </div>
+      <button class="new-chat" id="newChat">＋　开启新对话</button>
+      <div class="side-label">关于助手</div>
+      <p class="side-note">你好！我是小智，一个乐于帮助你学习、写作、编程和探索新想法的 AI 助手。</p>
+      <div class="status"><i class="dot"></i><span id="statusText">Gemini AI · 待配置</span></div>
+      <div class="side-label">使用提示</div>
+      <p class="side-note">按 Enter 发送<br>Shift + Enter 换行<br>点击回答下方的“复制”保存内容</p>
+    </aside>
+
+    <main>
+      <header><strong>智能对话</strong><span class="model">✦ 小智 AI 助手</span></header>
+      <section class="content">
+        <div id="messages" aria-live="polite">
+          <div class="welcome" id="welcome">
+            <div class="orb">✦</div>
+            <h1>你好，我是小智 AI</h1>
+            <p>今天有什么可以帮你？你可以问我问题、学习新知识，或一起完成一个创意项目。</p>
+            <div class="quick-grid">
+              <button class="quick" data-prompt="帮我制定一个每天学习中文的计划"><b>📚 学习中文</b><small>制定计划，练习表达</small></button>
+              <button class="quick" data-prompt="帮我写一个有创意的短篇故事"><b>✍️ 创意写作</b><small>故事、文案与灵感</small></button>
+              <button class="quick" data-prompt="请用简单的方式解释人工智能是什么"><b>🧠 探索 AI</b><small>理解科技与新知识</small></button>
+              <button class="quick" data-prompt="帮我写一个简单的网页小游戏"><b>💻 编程助手</b><small>代码思路与调试建议</small></button>
+            </div>
+          </div>
+        </div>
+        <div class="composer-wrap">
+          <div class="composer">
+            <textarea id="prompt" rows="1" placeholder="发送消息给小智 AI..." aria-label="输入消息"></textarea>
+            <button class="send" id="send" aria-label="发送消息">↑</button>
+          </div>
+          <div class="hint">AI 生成的内容可能有误，请对重要信息进行核实。</div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    // 真正接入模型时：在自己的服务器实现 POST /api/chat。
+    // 请求格式：{ messages: [{ role: "user"|"assistant", content: "..." }] }
+    // 返回格式：{ reply: "AI 的回答" }
+    // 不要把模型 API Key 写在这个前端文件里。
+    const API_URL = "/.netlify/functions/chat"; // Netlify 安全后端接口
+
+    const messagesEl = document.getElementById("messages");
+    const welcome = document.getElementById("welcome");
+    const input = document.getElementById("prompt");
+    const sendBtn = document.getElementById("send");
+    const statusText = document.getElementById("statusText");
+    let history = [];
+    let busy = false;
+
+    function addMessage(role, content) {
+      if (welcome && welcome.isConnected) welcome.remove();
+      const wrap = document.createElement("div");
+      wrap.className = `message ${role}`;
+      const avatar = document.createElement("div");
+      avatar.className = "avatar";
+      avatar.textContent = role === "user" ? "你" : "✦";
+      const body = document.createElement("div");
+      body.style.minWidth = "0";
+      const bubble = document.createElement("div");
+      bubble.className = "bubble";
+      bubble.textContent = content;
+      body.appendChild(bubble);
+      if (role === "assistant") {
+        const actions = document.createElement("div");
+        actions.className = "bubble-actions";
+        const copy = document.createElement("button");
+        copy.className = "copy";
+        copy.textContent = "复制回答";
+        copy.addEventListener("click", async () => {
+          try { await navigator.clipboard.writeText(content); copy.textContent = "已复制"; }
+          catch { copy.textContent = "复制失败"; }
+          setTimeout(() => copy.textContent = "复制回答", 1500);
+        });
+        actions.appendChild(copy);
+        body.appendChild(actions);
+      }
+      wrap.append(avatar, body);
+      messagesEl.appendChild(wrap);
+      messagesEl.scrollTop = messagesEl.scrollHeight;
+      return wrap;
+    }
+
+    function demoReply(text) {
+      const q = text.toLowerCase();
+      if (text.includes("中文") || q.includes("chinese"))
+        return "当然可以！我们可以一起练习中文。建议每天安排 15–20 分钟：先学习 5 个新词，再用它们造句，最后进行一段简短对话。你也可以直接发中文给我，我会帮你修改表达。";
+      if (text.includes("人工智能") || q.includes("ai"))
+        return "人工智能（AI）是让计算机执行通常需要人类智能的任务的技术，例如理解语言、识别图像、分析信息和生成内容。像聊天助手这样的系统，可以根据你的输入和上下文生成回答。";
+      if (text.includes("故事") || text.includes("写作"))
+        return "当然！我们可以先确定主题、人物和情绪，再设计开头、转折与结尾。告诉我你想写什么类型的故事，我可以和你一起完成初稿。";
+      if (text.includes("网页") || text.includes("编程") || q.includes("code"))
+        return "可以！请告诉我你想实现的网页功能、使用的技术，以及目前遇到的问题。我可以帮你拆解需求、编写 HTML/CSS/JavaScript，并解释每一段代码。";
+      return `我收到你的问题了：“${text}”\n\n目前这个文件运行在演示模式，还没有连接真正的 AI 模型。你可以继续尝试快捷提问，或配置自己的后端接口，让我生成实时 AI 回答。`;
+    }
+
+    async function submit(text) {
+      text = text.trim();
+      if (!text || busy) return;
+      busy = true; sendBtn.disabled = true;
+      addMessage("user", text);
+      history.push({ role: "user", content: text });
+      input.value = ""; resizeInput();
+
+      const typing = document.createElement("div");
+      typing.className = "typing";
+      typing.textContent = "小智正在思考…";
+      messagesEl.appendChild(typing);
+      messagesEl.scrollTop = messagesEl.scrollHeight;
+
+      try {
+        let reply;
+        if (API_URL) {
+          statusText.textContent = "已配置 AI 接口";
+          const response = await fetch(API_URL, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ messages: history })
+          });
+          if (!response.ok) throw new Error(`接口错误：${response.status}`);
+          const data = await response.json();
+          reply = data.reply;
+          if (typeof reply !== "string" || !reply) throw new Error("接口返回格式不正确，需包含 reply 字符串");
+        } else {
+          await new Promise(resolve => setTimeout(resolve, 550));
+          reply = demoReply(text);
+        }
+        typing.remove();
+        history.push({ role: "assistant", content: reply });
+        addMessage("assistant", reply);
+      } catch (error) {
+        typing.remove();
+        const message = `连接失败：${error.message}\n请检查后端服务和 API_URL 配置。`;
+        addMessage("assistant", message);
+      } finally {
+        busy = false; sendBtn.disabled = false; input.focus();
+      }
+    }
+
+    function resizeInput() {
+      input.style.height = "auto";
+      input.style.height = Math.min(input.scrollHeight, 140) + "px";
+    }
+    input.addEventListener("input", resizeInput);
+    input.addEventListener("keydown", e => {
+      if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); submit(input.value); }
+    });
+    sendBtn.addEventListener("click", () => submit(input.value));
+    document.querySelectorAll(".quick").forEach(btn =>
+      btn.addEventListener("click", () => submit(btn.dataset.prompt))
+    );
+    document.getElementById("newChat").addEventListener("click", () => {
+      history = [];
+      messagesEl.innerHTML = "";
+      const intro = document.createElement("div");
+      intro.className = "welcome";
+      intro.innerHTML = '<div class="orb">✦</div><h1>新对话开始了</h1><p>你好！今天想聊些什么？</p>';
+      messagesEl.appendChild(intro);
+      input.focus();
+    });
+  </script>
+</body>
+</html>
